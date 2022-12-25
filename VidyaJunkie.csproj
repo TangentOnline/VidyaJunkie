@@ -1,0 +1,153 @@
+<!--
+  dotnet clean
+  dotnet msbuild -t:Clear
+  dotnet restore
+  dotnet build -c Debug -p:ExtraDefineConstants=
+  dotnet build -c Release -p:ExtraDefineConstants=
+  dotnet run -c Debug -p:ExtraDefineConstants=
+  dotnet run -c Release -p:ExtraDefineConstants=
+  dotnet publish -c Debug -p:ExtraDefineConstants=\"PUBLISH\"
+  dotnet publish -c Release -p:ExtraDefineConstants=\"PUBLISH\"
+-->
+
+<Project>
+    <PropertyGroup>
+        <BaseIntermediateOutputPath>$(ProjectDir)Build\$(Configuration)\obj\</BaseIntermediateOutputPath>
+        <BaseOutputPath>$(ProjectDir)Build\$(Configuration)\bin\</BaseOutputPath>
+
+        <IntermediateOutputPath>$(ProjectDir)Build\$(Configuration)\obj\</IntermediateOutputPath>
+        <MSBUildProjectExtensionsPath>$(ProjectDir)Build\$(Configuration)\pck\</MSBUildProjectExtensionsPath>
+
+        <MSBuildUserExtensionsPath>$(ProjectDir)Build\$(Configuration)\pck\</MSBuildUserExtensionsPath>
+
+        <OutDir>$(ProjectDir)Build\$(Configuration)\bin\</OutDir>
+        <OutputPath>$(ProjectDir)Build\$(Configuration)\bin\</OutputPath>
+
+        <PackageOutputDir>$(ProjectDir)Build\$(Configuration)\pck\</PackageOutputDir>
+
+        <PublishDir>$(ProjectDir)Build\$(Configuration)\pub\</PublishDir>
+    </PropertyGroup>
+    
+    <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+    
+    <PropertyGroup>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <EnablePreviewFeatures>true</EnablePreviewFeatures>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
+        <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <IsPackable>false</IsPackable>
+        <AssemblyName>Vidya Junkie</AssemblyName>
+        <ApplicationIcon>Resource\AppIcon.ico</ApplicationIcon>
+        <Win32Icon>Resource\AppIcon.ico</Win32Icon>
+        <LangVersion>11</LangVersion>
+        <NoLogo>true</NoLogo>
+        <NoWin32Manifest />
+        <Nullable>enable</Nullable>
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+        <RunPostBuildEvent>Always</RunPostBuildEvent>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
+        <TargetFramework>net7.0</TargetFramework>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>Full</DebugType>
+        <DefineConstants>$(ExtraDefineConstants);DEBUG</DefineConstants>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <DebugSymbols>false</DebugSymbols>
+        <DebugType>None</DebugType>
+        <DefineConstants>$(ExtraDefineConstants);RELEASE</DefineConstants>
+        <Optimize>true</Optimize>
+        <OutputType>WinExe</OutputType>
+        <TieredCompilation>true</TieredCompilation>
+        <WarningLevel>0</WarningLevel>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" $(DefineConstants.Contains(PUBLISH)) ">
+        <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+
+        <ErrorOnDuplicatePublishOutputFiles>true</ErrorOnDuplicatePublishOutputFiles>
+        <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+        
+        <PublishReadyToRun>true</PublishReadyToRun>
+        <PublishReadyToRunComposite>true</PublishReadyToRunComposite>
+        <PublishReadyToRunEmitSymbols>false</PublishReadyToRunEmitSymbols>
+        
+        <PublishTrimmed>true</PublishTrimmed>
+        <TrimMode>partial</TrimMode>
+        <TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
+        
+        <PublishSingleFile>true</PublishSingleFile>
+                
+        <SelfContained>true</SelfContained>
+        <UseAppHost>true</UseAppHost>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Using Include="System" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="AngleSharp" Version="0.17.1" />
+        <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.1.0-preview2" />
+        <PackageReference Include="F23.StringSimilarity" Version="5.0.0" />
+        <PackageReference Include="ImGui.NET" Version="1.88.0" />
+        <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="5.0.0-preview.5.20278.1" />
+        <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="7.0.0" />
+        <PackageReference Include="NicoApiClient" Version="1.0.1" />
+        <PackageReference Include="QoiSharp" Version="1.0.0" />
+        <PackageReference Include="Silk.NET" Version="2.16.0" />
+        <PackageReference Include="Silk.NET.OpenGL.Extensions.ImGui" Version="2.16.0" />
+        <PackageReference Include="SixLabors.Fonts" Version="1.0.0-beta19" />
+        <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
+        <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta15" />
+        <PackageReference Include="SixLabors.ImageSharp.Web" Version="2.0.2" />
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="7.0.0-preview.2.22152.2" />
+        <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
+        <PackageReference Include="System.Text.Encodings.Web" Version="7.0.0" />
+        <PackageReference Include="System.Text.Json" Version="7.0.1" />
+        <PackageReference Include="Xabe.FFmpeg" Version="5.2.2" />
+        <PackageReference Include="Xabe.FFmpeg.Downloader" Version="5.2.2" />
+        <PackageReference Include="YoutubeExplode" Version="6.2.5" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Resource\Temp" />
+    </ItemGroup>
+  
+    <Target Name="Clear">
+        <RemoveDir Directories="$(ProjectDir)Build" />
+    </Target>
+
+    <Target BeforeTargets="PrepareForBuild" Condition="!Exists($(TargetDir))" Name="MyPreBuildRestore">
+        <Exec Command="dotnet restore -p:Configuration=$(Configuration)" />
+    </Target>
+
+    <Target BeforeTargets="PrepareForBuild" Name="MyPreBuild"></Target>
+    <Target AfterTargets="PostBuildEvent" Name="MyPostBuild"></Target>
+    
+    <Target AfterTargets="Publish" Name="MyPostPublish">
+        <ItemGroup>
+            <MyPostPublishFolders Include="$(ProjectDir)Resource\**\*.*" />
+        </ItemGroup>
+        <RemoveDir Directories="$(PublishDir)Resource" />
+        <Copy DestinationFiles="@(MyPostPublishFolders->'$(PublishDir)Resource\%(RecursiveDir)%(Filename)%(Extension)')" SourceFiles="@(MyPostPublishFolders)" />
+    </Target>
+
+    <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+
+    <PropertyGroup>
+        <RunArguments></RunArguments>
+        <RunWorkingDirectory>$(ProjectDir)</RunWorkingDirectory>
+    </PropertyGroup>
+</Project>
