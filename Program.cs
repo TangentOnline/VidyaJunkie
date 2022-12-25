@@ -2,7 +2,6 @@
 using System.Net;
 using System.Numerics;
 using ImGuiNET;
-using Silk.NET.GLFW;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.ImGui;

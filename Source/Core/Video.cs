@@ -49,15 +49,14 @@ public class Video : IEquatable<Video>, SwapListElement {
 	[JsonIgnore]
 	public int listIndex { get; set; }
 
-	public void SaveVideoThumbnailToDisk() {
-		if (this.videoThumbnailUrl != "" && (this.videoThumbnailFilename == "" || !File.Exists(this.VideoThumbnailFilepath))) {
-			Task.Run(() => {
+	public Task CreateThumbnail() {
+		if (this.videoThumbnailUrl != "" && !this.HasThumbnail()) {
+			return Task.Run(() => {
 				try {
 					StringBuilder sb = new StringBuilder($"{this.videoName}_{this.videoUrlHash}");
 					foreach (char invalidFileNameChar in Path.GetInvalidFileNameChars()) {
 						sb.Replace(invalidFileNameChar.ToString(), "");
 					}
-
 					string localFilename = sb.ToString();
 
 					if (AddWindow.RawVideoExtensions.Any(e => this.videoThumbnailUrl.EndsWith(e, StringComparison.CurrentCultureIgnoreCase))) {
@@ -76,7 +75,6 @@ public class Video : IEquatable<Video>, SwapListElement {
 					localFilename += ".qoi";
 
 					byte[] imageBytes = Program.HttpClient.GetByteArrayAsync(this.videoThumbnailUrl).Result;
-
 					using (Image<Bgra32> image = Image.Load<Bgra32>(new Configuration { PreferContiguousImageBuffers = true }, imageBytes, TextureUtilities.GetDecoder(Image.DetectFormat(imageBytes).FileExtensions.ToList()))) {
 						if (image.Width > 256) {
 							image.Mutate(i => i.Resize(new Size(256, 0)));
@@ -95,10 +93,20 @@ public class Video : IEquatable<Video>, SwapListElement {
 				} catch (Exception e) { }
 			});
 		}
+
+		return Task.CompletedTask;
 	}
 
 	public bool HasThumbnail() {
 		return this.videoThumbnailFilename != "" && File.Exists(this.VideoThumbnailFilepath);
+	}
+
+	public Texture GetThumbnailTexture() {
+		if (this.HasThumbnail()) {
+			return Texture.CacheLoad(this.VideoThumbnailFilepath);
+		}
+
+		return Texture.PlaceholderTexture;
 	}
 
 	public Video Clone() {
@@ -132,14 +140,6 @@ public class Video : IEquatable<Video>, SwapListElement {
 
 	public bool IsValid() {
 		return this.videoName != "" && this.videoUrl != "";
-	}
-
-	public Texture GetThumbnailTexture() {
-		if (this.HasThumbnail()) {
-			return Texture.CacheLoad(this.VideoThumbnailFilepath);
-		}
-
-		return Texture.PlaceholderTexture;
 	}
 }
 

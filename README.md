@@ -10,7 +10,7 @@ Automatically parse urls and add to playlists when copied to clipboard <br />
 Add videos manually, supporting any url and domain <br />
 Fast and smart search, Fuzzy search, suggestions, Filter videos by uploader, date and length <br />
 Sort videos by title, uploader, length, date <br />
-Double click to open video in browser, select videos and press Ctrl + C to copy video urls, Edit video data, Create Streamable clip
+Double click result entry to open video in browser, select videos (shift click) and press Ctrl + C to copy video urls, Edit video data, Create Streamable clip, drag and drop videos to move to different playlist
 
 # Download
 You can download the program from the release page [here](https://github.com/TangentOnline/VidyaJunkie/releases)

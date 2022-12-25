@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 
 namespace VidyaJunkie;
 
@@ -78,7 +79,7 @@ public class PlaylistFolder {
 	}
 
 	public void CreateFolder(string name) {
-		if (name.Length < 1 || name.StartsWith(".")) {
+		if (name.Length < 1 || name.StartsWith(".") || name.Any(c => Path.GetInvalidFileNameChars().Contains(c))) {
 			return;
 		}
 
@@ -123,7 +124,7 @@ public class PlaylistFolder {
 	}
 
 	public void Move(PlaylistFolder playlistFolder) {
-		if (this == playlistFolder || this.parentFolder == playlistFolder || playlistFolder.Folderpath.Contains(this.Folderpath)) {
+		if (this == playlistFolder || this.parentFolder == playlistFolder || playlistFolder.Folderpath.Contains(this.Folderpath + "\\")) {
 			return;
 		}
 
@@ -249,5 +250,18 @@ public class PlaylistFolder {
 		count += this.GetPlaylistCount();
 
 		return count;
+	}
+
+	public string GetVideoUrlsRecurse() {
+		StringBuilder vidUrls = new StringBuilder();
+
+		foreach (Playlist playlist in this.playlists) {
+			vidUrls.Append(playlist.GetVideoUrls());
+		}
+		foreach (PlaylistFolder playlistFolder in this.folders) {
+			vidUrls.Append(playlistFolder.GetVideoUrlsRecurse());
+		}
+
+		return vidUrls.ToString();
 	}
 }

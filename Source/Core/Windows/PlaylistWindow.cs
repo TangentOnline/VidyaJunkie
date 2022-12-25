@@ -64,7 +64,7 @@ public class PlaylistWindow {
 					ImGui.EndDragDropSource();
 
 					this.dragDropFolder = null;
-					Program.SearchWindow.dragDropVideo = null;
+					Program.SearchWindow.dragDropVideo = false;
 				}
 
 				if (ImGui.BeginDragDropTarget()) {
@@ -81,34 +81,27 @@ public class PlaylistWindow {
 								this.dragDropFolder = null;
 							}
 
-							if (Program.SearchWindow.dragDropVideo != null && Program.SearchWindow.dragDropVideo.inPlaylist != playlist) {
-								Video dragDropVideo = Program.SearchWindow.dragDropVideo;
-								bool inTemp = false;
-								if (dragDropVideo.HasThumbnail()) {
-									File.Move(dragDropVideo.VideoThumbnailFilepath, Path.Combine(Resource.TempFolder, dragDropVideo.videoThumbnailFilename));
-									inTemp = true;
-								}
-								if (this.AnyPlaylistSelected()) {
-									foreach (Playlist selectedPlaylist in this.selectedPlaylists) {
-										if (selectedPlaylist.ContainsVideo(dragDropVideo)) {
-											selectedPlaylist.RemoveVideo(dragDropVideo.videoUrl);
+							if (Program.SearchWindow.dragDropVideo) {
+								foreach (Video dragDropVideo in Program.SearchWindow.selectedVideos) {
+									if (this.AnyPlaylistSelected()) {
+										foreach (Playlist selectedPlaylist in this.selectedPlaylists) {
+											if (selectedPlaylist.ContainsVideo(dragDropVideo)) {
+												selectedPlaylist.RemoveVideo(dragDropVideo.videoUrl).Wait();
+											}
+										}
+									} else {
+										List<Playlist> allPlaylists = new List<Playlist>();
+										Program.MainPlaylistFolder.GetAllPlaylistsRecurse(allPlaylists);
+										foreach (Playlist p in allPlaylists) {
+											if (p.ContainsVideo(dragDropVideo)) {
+												p.RemoveVideo(dragDropVideo.videoUrl).Wait();
+											}
 										}
 									}
-								} else {
-									List<Playlist> allPlaylists = new List<Playlist>();
-									Program.MainPlaylistFolder.GetAllPlaylistsRecurse(allPlaylists);
-									foreach (Playlist p in allPlaylists) {
-										if (p.ContainsVideo(dragDropVideo)) {
-											p.RemoveVideo(dragDropVideo.videoUrl);
-										}
-									}
-								}
-								playlist.AddVideo(dragDropVideo);
-								if (inTemp) {
-									File.Move(Path.Combine(Resource.TempFolder, dragDropVideo.videoThumbnailFilename), Path.Combine(playlist.ThumbnailsPath, dragDropVideo.videoThumbnailFilename));
+									playlist.AddVideo(dragDropVideo);
 								}
 
-								Program.SearchWindow.dragDropVideo = null;
+								Program.SearchWindow.dragDropVideo = false;
 								this.ShouldReCache();
 							}
 						});
@@ -389,7 +382,7 @@ public class PlaylistWindow {
 						ImGui.EndDragDropSource();
 
 						this.dragDropPlaylist = null;
-						Program.SearchWindow.dragDropVideo = null;
+						Program.SearchWindow.dragDropVideo = false;
 					}
 
 					if (ImGui.BeginDragDropTarget()) {

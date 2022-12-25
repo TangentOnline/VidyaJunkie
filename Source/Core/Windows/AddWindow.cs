@@ -83,6 +83,7 @@ public class AddWindow {
 			this.manualVideoUploaded = "";
 			this.manualVideoUrl = "";
 			this.multiLineUrlText = "";
+			this.autoParse = false;
 		}
 
 		if (this.modeComboSelected == 0) {
@@ -133,7 +134,7 @@ public class AddWindow {
 			}
 
 			float parseFooter = ImGui.GetStyle().ItemSpacing.Y + ImGui.GetFrameHeightWithSpacing();
-			if (ImGui.InputTextMultiline("##MultiLineAddInput", ref this.multiLineUrlText, 1024 * 64, new Vector2(-1f, -parseFooter), ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CtrlEnterForNewLine | ImGuiInputTextFlags.AllowTabInput | ImGuiInputTextFlags.CallbackAlways | ImGuiInputTextFlags.CallbackEdit, data => {
+			if (ImGui.InputTextMultiline("##MultiLineAddInput", ref this.multiLineUrlText, 1024 * 1024, new Vector2(-1f, -parseFooter), ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.CtrlEnterForNewLine | ImGuiInputTextFlags.AllowTabInput | ImGuiInputTextFlags.CallbackAlways | ImGuiInputTextFlags.CallbackEdit, data => {
 				    if (ImGui.GetIO().KeyCtrl && ImGui.IsKeyPressed(ImGuiKey.V) && (data->EventFlag & ImGuiInputTextFlags.CallbackEdit) != 0) {
 						data->CursorPos = Math.Max(0, data->BufTextLen - Program.InputContext.GetClipboard().Length);
 					}
@@ -331,8 +332,6 @@ public class AddWindow {
 
 		foreach (Playlist playlist in playlists) {
 			Video vidClone = video.Clone();
-			vidClone.inPlaylist = playlist;
-			vidClone.SaveVideoThumbnailToDisk();
 			playlist.AddVideo(vidClone);
 		}
 
@@ -358,7 +357,9 @@ public class AddWindow {
 					Uri link = new Uri(matchedLink.Value);
 					if (link.Host.Contains("youtube.com", StringComparison.CurrentCultureIgnoreCase) || link.Host.Contains("youtu.be", StringComparison.CurrentCultureIgnoreCase)) {
 						VideoId? videoID = VideoId.TryParse(link.OriginalString);
-						if (videoID != null) {
+						PlaylistId? PiD = PlaylistId.TryParse(link.OriginalString);
+
+						if (videoID != null && (PiD == null || (PiD != null && link.OriginalString.Contains("index=")))) {
 							this.ParseYoutubeVideo(link, playlists);
 						} else {
 							PlaylistId? playlistID = PlaylistId.TryParse(link.OriginalString);

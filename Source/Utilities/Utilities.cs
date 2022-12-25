@@ -84,7 +84,10 @@ public static class Utilities {
 	}
 
 	public static void OpenWebLink(string url) {
-		Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+		try {
+			Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
+		} catch (Exception e) {
+		}
 	}
 
 	public static bool IsProcessUnique() {

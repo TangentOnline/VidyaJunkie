@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 
 namespace VidyaJunkie;
 
@@ -27,8 +28,8 @@ public class Playlist {
 		}
 	}
 
-	public void Load() {
-		Task.Run(() => {
+	public Task Load() {
+		return Task.Run(() => {
 			List<Video> localVids = new List<Video>();
 			Utf8JsonReader reader = new Utf8JsonReader(File.ReadAllBytes(this.Filepath), true, new JsonReaderState());
 			localVids = JsonSerializer.Deserialize(ref reader, VideoJsonContext.Default.ListVideo) ?? new List<Video>();
@@ -41,7 +42,7 @@ public class Playlist {
 		});
 	}
 
-	public void Save() {
+	public Task Save() {
 		if (this.unsavedChanges) {
 			this.unsavedChanges = false;
 			this.saveTask = Task.Run(() => {
@@ -59,7 +60,10 @@ public class Playlist {
 					}
 				}
 			});
+			return this.saveTask;
 		}
+
+		return Task.CompletedTask;
 	}
 
 	public void AwaitSave() {
@@ -116,31 +120,34 @@ public class Playlist {
 	public void AddVideo(Video video) {
 		if (video.IsValid() && !this.ContainsVideo(video)) {
 			video.inPlaylist = this;
+			video.CreateThumbnail();
 			this.videos.SwapAddFast(video);
 			this.unsavedChanges = true;
 		}
 	}
 
-	public void RemoveVideo(Video video) {
-		Task.Run(() => {
+	public Task RemoveVideo(Video video) {
+		var t = Task.Run(() => {
 			if (video.HasThumbnail()) {
 				File.Delete(video.VideoThumbnailFilepath);
 			}
 		});
 		this.videos.SwapRemoveFast(video);
 		this.unsavedChanges = true;
+		return t;
 	}
 
-	public void RemoveVideo(string videoUrl) {
+	public Task RemoveVideo(string videoUrl) {
 		int videoHash = videoUrl.GetDeterministicHashCode();
 
 		for (int i = this.videos.Count - 1; i >= 0; i--) {
 			Video video = this.videos[i];
 			if (video.videoUrlHash == videoHash && video.videoUrl == videoUrl) {
-				this.RemoveVideo(video);
-				return;
+				return this.RemoveVideo(video);
 			}
 		}
+
+		return Task.CompletedTask;
 	}
 
 	public List<Video> GetAllVideos() {
@@ -149,5 +156,15 @@ public class Playlist {
 
 	public int GetVideoCount() {
 		return this.videos.Count;
+	}
+
+	public string GetVideoUrls() {
+		StringBuilder vidUrls = new StringBuilder();
+
+		for (int i = 0; i < this.videos.Count; i++) {
+			vidUrls.Append(this.videos[i].videoUrl + "\n");
+		}
+
+		return vidUrls.ToString();
 	}
 }

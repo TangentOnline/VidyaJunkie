@@ -21,7 +21,6 @@ public enum VideoOrderBy {
 public class SearchWindow {
 	private Action? modal;
 
-
 	private string searchVideoName = "";
 	private string searchUploaderName = "";
 	private string searchVideoLength = "";
@@ -42,7 +41,8 @@ public class SearchWindow {
 	private string uploaderNamesLongestName = "";
 
 	private VideoOrderBy orderBy = VideoOrderBy.TITLE_ASC;
-	public Video? dragDropVideo = null;
+
+	public bool dragDropVideo;
 
 	public unsafe void Update() {
 		ImGui.Begin($"{MaterialDesignIcons.Search} Search", ImGuiWindowFlags.NoCollapse);
@@ -237,10 +237,10 @@ public class SearchWindow {
 
 		string infix = this.orderBy == VideoOrderBy.TITLE_DESC ? MaterialDesignIcons.Arrow_downward : this.orderBy == VideoOrderBy.TITLE_ASC ? MaterialDesignIcons.Arrow_upward : "";
 		if (ImGui.Button($"Title {infix}", new Vector2(ImGui.GetWindowWidth() * 0.25f, 0f))) {
-			if (this.orderBy == VideoOrderBy.TITLE_DESC) {
-				this.orderBy = VideoOrderBy.TITLE_ASC;
-			} else {
+			if (this.orderBy == VideoOrderBy.TITLE_ASC) {
 				this.orderBy = VideoOrderBy.TITLE_DESC;
+			} else {
+				this.orderBy = VideoOrderBy.TITLE_ASC;
 			}
 
 			this.SortVideos(ref this.filteredVideos);
@@ -249,10 +249,10 @@ public class SearchWindow {
 		ImGui.SameLine();
 		infix = this.orderBy == VideoOrderBy.UPLOADER_DESC ? MaterialDesignIcons.Arrow_downward : this.orderBy == VideoOrderBy.UPLOADER_ASC ? MaterialDesignIcons.Arrow_upward : "";
 		if (ImGui.Button($"Uploader {infix}", new Vector2(ImGui.GetWindowWidth() * 0.25f, 0f))) {
-			if (this.orderBy == VideoOrderBy.UPLOADER_DESC) {
-				this.orderBy = VideoOrderBy.UPLOADER_ASC;
-			} else {
+			if (this.orderBy == VideoOrderBy.UPLOADER_ASC) {
 				this.orderBy = VideoOrderBy.UPLOADER_DESC;
+			} else {
+				this.orderBy = VideoOrderBy.UPLOADER_ASC;
 			}
 
 			this.SortVideos(ref this.filteredVideos);
@@ -261,10 +261,10 @@ public class SearchWindow {
 		ImGui.SameLine();
 		infix = this.orderBy == VideoOrderBy.LENGTH_DESC ? MaterialDesignIcons.Arrow_downward : this.orderBy == VideoOrderBy.LENGTH_ASC ? MaterialDesignIcons.Arrow_upward : "";
 		if (ImGui.Button($"Length {infix}", new Vector2(ImGui.GetWindowWidth() * 0.25f, 0f))) {
-			if (this.orderBy == VideoOrderBy.LENGTH_DESC) {
-				this.orderBy = VideoOrderBy.LENGTH_ASC;
-			} else {
+			if (this.orderBy == VideoOrderBy.LENGTH_ASC) {
 				this.orderBy = VideoOrderBy.LENGTH_DESC;
+			} else {
+				this.orderBy = VideoOrderBy.LENGTH_ASC;
 			}
 
 			this.SortVideos(ref this.filteredVideos);
@@ -273,10 +273,10 @@ public class SearchWindow {
 		ImGui.SameLine();
 		infix = this.orderBy == VideoOrderBy.DATE_DESC ? MaterialDesignIcons.Arrow_downward : this.orderBy == VideoOrderBy.DATE_ASC ? MaterialDesignIcons.Arrow_upward : "";
 		if (ImGui.Button($"Date Uploaded {infix}", new Vector2(-1f, 0f))) {
-			if (this.orderBy == VideoOrderBy.DATE_DESC) {
-				this.orderBy = VideoOrderBy.DATE_ASC;
-			} else {
+			if (this.orderBy == VideoOrderBy.DATE_ASC) {
 				this.orderBy = VideoOrderBy.DATE_DESC;
+			} else {
+				this.orderBy = VideoOrderBy.DATE_ASC;
 			}
 
 			this.SortVideos(ref this.filteredVideos);
@@ -324,10 +324,12 @@ public class SearchWindow {
 
 			if (ImGui.BeginDragDropSource()) {
 				ImGui.SetDragDropPayload("AddWindowDragDropPayload", nint.Zero, 0);
-				ImGui.Text(video.videoName);
-				this.dragDropVideo = video;
+				foreach (Video selectedVideo in this.selectedVideos) {
+					ImGui.Text(selectedVideo.videoName);
+				}
 				ImGui.EndDragDropSource();
 
+				this.dragDropVideo = true;
 				Program.PlaylistWindow.dragDropPlaylist = null;
 				Program.PlaylistWindow.dragDropFolder = null;
 			}
@@ -347,12 +349,12 @@ public class SearchWindow {
 				}
 			}
 
-			if (!ImGui.GetIO().KeyShift && ImGui.IsItemHovered() && ImGui.IsItemClicked(ImGuiMouseButton.Left)) {
+			if (!ImGui.GetIO().KeyShift && ImGui.IsItemHovered() && ImGui.IsMouseReleased(ImGuiMouseButton.Left)) {
 				this.selectedVideos.Clear();
 				this.selectedVideos.Add(video);
 			}
 
-			if (ImGui.GetIO().KeyShift && ImGui.IsItemHovered() && ImGui.IsItemClicked(ImGuiMouseButton.Left)) {
+			if (ImGui.GetIO().KeyShift && ImGui.IsItemHovered() && ImGui.IsMouseReleased(ImGuiMouseButton.Left)) {
 				if (this.selectedVideos.Contains(video)) {
 					this.selectedVideos.Remove(video);
 				} else {
@@ -374,7 +376,7 @@ public class SearchWindow {
 					Program.InputContext.SetPreviousClipboard(video.videoUrl);
 				}
 
-				if (ImGui.MenuItem("Copy Selected Videos Urls [Ctrl + C]")) {
+				if (ImGui.MenuItem($"Copy Selected Videos Urls [{this.selectedVideos.Count}] [Ctrl + C]")) {
 					CopySelectedVideosToClipboard();
 				}
 
@@ -406,7 +408,28 @@ public class SearchWindow {
 						}
 					}
 
+					this.selectedVideos.Remove(video);
+					Program.PlaylistWindow.ShouldReCache();
+				}
 
+				if (ImGui.MenuItem($"Remove Selected Videos [{this.selectedVideos.Count}]")) {
+					if (Program.PlaylistWindow.AnyPlaylistSelected()) {
+						foreach (Playlist selectedPlaylist in Program.PlaylistWindow.GetSelectedPlaylists()) {
+							foreach (Video selectedVideo in this.selectedVideos) {
+								selectedPlaylist.RemoveVideo(selectedVideo.videoUrl);
+							}
+						}
+					} else {
+						List<Playlist> playlists = new List<Playlist>();
+						Program.MainPlaylistFolder.GetAllPlaylistsRecurse(playlists);
+						foreach (Playlist playlist in playlists) {
+							foreach (Video selectedVideo in this.selectedVideos) {
+								playlist.RemoveVideo(selectedVideo.videoUrl);
+							}
+						}
+					}
+
+					this.selectedVideos.Clear();
 					Program.PlaylistWindow.ShouldReCache();
 				}
 
@@ -436,7 +459,7 @@ public class SearchWindow {
 								if (Program.PlaylistWindow.AnyPlaylistSelected()) {
 									foreach (Playlist selectedPlaylist in Program.PlaylistWindow.GetSelectedPlaylists()) {
 										if (selectedPlaylist.ContainsVideo(video)) {
-											selectedPlaylist.RemoveVideo(video);
+											selectedPlaylist.RemoveVideo(video).Wait();
 											selectedPlaylist.AddVideo(newVideo);
 										}
 									}
@@ -445,7 +468,7 @@ public class SearchWindow {
 									Program.MainPlaylistFolder.GetAllPlaylistsRecurse(playlists);
 									foreach (Playlist playlist in playlists) {
 										if (playlist.ContainsVideo(video)) {
-											playlist.RemoveVideo(video);
+											playlist.RemoveVideo(video).Wait();
 											playlist.AddVideo(newVideo);
 										}
 									}
@@ -480,7 +503,7 @@ public class SearchWindow {
 								EditVideo();
 							}
 
-							if (ImGui.InputTextWithHint("##EditUploaderName", "Uploader Url", ref newVideo.uploaderUrl, 256, ImGuiInputTextFlags.EnterReturnsTrue)) {
+							if (ImGui.InputTextWithHint("##EditUploaderUrl", "Uploader Url", ref newVideo.uploaderUrl, 256, ImGuiInputTextFlags.EnterReturnsTrue)) {
 								EditVideo();
 							}
 
@@ -770,7 +793,7 @@ public class SearchWindow {
 	public void SortVideos(ref List<Video> videos) {
 		if (this.orderBy == VideoOrderBy.TITLE_ASC) {
 			if (this.searchVideoName != "") {
-				videos = videos.OrderBy(v => v.fuzzySimilarityScore).ToList();
+				videos = videos.OrderByDescending(v => v.fuzzySimilarityScore).ToList();
 			} else {
 				videos = videos.OrderBy(v => v.videoName).ToList();
 			}
