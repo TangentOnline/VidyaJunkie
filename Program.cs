@@ -207,9 +207,6 @@ public static class Program {
 			}
 
 			mainPlaylistLoader.Wait();
-			using (File.Create(Path.Combine(Resource.ResourceFolder, "VidUrls.txt"))) {
-			}
-			File.WriteAllText(Path.Combine(Resource.ResourceFolder, "VidUrls.txt"), MainPlaylistFolder.GetVideoUrlsRecurse());
 			PlaylistWindow.ShouldReCache();
 			SearchWindow.ShouldReCache();
 		};

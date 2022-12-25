@@ -534,12 +534,14 @@ public class SearchWindow {
 					};
 				}
 
+				if (Program.AddWindow.IsParsing) {
+					ImGui.EndDisabled();
+				}
+
 				ImGui.EndPopup();
 			}
 
-			if (Program.AddWindow.IsParsing) {
-				ImGui.EndDisabled();
-			}
+
 
 			ImGui.SameLine();
 
