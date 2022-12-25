@@ -322,16 +322,18 @@ public class SearchWindow {
 			ImGui.Selectable("\n\n", ref trashVal, ImGuiSelectableFlags.SpanAllColumns);
 			ImGui.PopID();
 
-			if (ImGui.BeginDragDropSource()) {
-				ImGui.SetDragDropPayload("AddWindowDragDropPayload", nint.Zero, 0);
-				foreach (Video selectedVideo in this.selectedVideos) {
-					ImGui.Text(selectedVideo.videoName);
-				}
-				ImGui.EndDragDropSource();
+			if (!Program.AddWindow.IsParsing) {
+				if (ImGui.BeginDragDropSource()) {
+					ImGui.SetDragDropPayload("AddWindowDragDropPayload", nint.Zero, 0);
+					foreach (Video selectedVideo in this.selectedVideos) {
+						ImGui.Text(selectedVideo.videoName);
+					}
+					ImGui.EndDragDropSource();
 
-				this.dragDropVideo = true;
-				Program.PlaylistWindow.dragDropPlaylist = null;
-				Program.PlaylistWindow.dragDropFolder = null;
+					this.dragDropVideo = true;
+					Program.PlaylistWindow.dragDropPlaylist = null;
+					Program.PlaylistWindow.dragDropFolder = null;
+				}
 			}
 
 			if (!ImGui.GetIO().KeyCtrl && !ImGui.GetIO().KeyShift && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left) && ImGui.IsItemHovered()) {
@@ -394,6 +396,10 @@ public class SearchWindow {
 				}
 
 				ImGui.Separator();
+
+				if (Program.AddWindow.IsParsing) {
+					ImGui.BeginDisabled(true);
+				}
 
 				if (ImGui.MenuItem("Remove Video")) {
 					if (Program.PlaylistWindow.AnyPlaylistSelected()) {
@@ -529,6 +535,10 @@ public class SearchWindow {
 				}
 
 				ImGui.EndPopup();
+			}
+
+			if (Program.AddWindow.IsParsing) {
+				ImGui.EndDisabled();
 			}
 
 			ImGui.SameLine();

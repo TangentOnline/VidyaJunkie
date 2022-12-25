@@ -57,57 +57,60 @@ public class PlaylistWindow {
 					}
 				}
 
-				if (ImGui.BeginDragDropSource()) {
-					ImGui.SetDragDropPayload("AddWindowDragDropPayload", nint.Zero, 0);
-					ImGui.Text(playlist.Name);
-					this.dragDropPlaylist = playlist;
-					ImGui.EndDragDropSource();
+				if (!Program.AddWindow.IsParsing) {
+					if (ImGui.BeginDragDropSource()) {
+						ImGui.SetDragDropPayload("AddWindowDragDropPayload", nint.Zero, 0);
+						ImGui.Text(playlist.Name);
+						this.dragDropPlaylist = playlist;
+						ImGui.EndDragDropSource();
 
-					this.dragDropFolder = null;
-					Program.SearchWindow.dragDropVideo = false;
-				}
-
-				if (ImGui.BeginDragDropTarget()) {
-					if (ImGui.AcceptDragDropPayload("AddWindowDragDropPayload").NativePtr != null) {
-						this.doAfterRender.Add(() => {
-							if (this.dragDropPlaylist != null) {
-								this.RemoveSelectedPlaylist(this.dragDropPlaylist);
-								this.dragDropPlaylist.Move(parentFolder);
-								this.dragDropPlaylist = null;
-							}
-
-							if (this.dragDropFolder != null) {
-								this.dragDropFolder.Move(parentFolder);
-								this.dragDropFolder = null;
-							}
-
-							if (Program.SearchWindow.dragDropVideo) {
-								foreach (Video dragDropVideo in Program.SearchWindow.selectedVideos) {
-									if (this.AnyPlaylistSelected()) {
-										foreach (Playlist selectedPlaylist in this.selectedPlaylists) {
-											if (selectedPlaylist.ContainsVideo(dragDropVideo)) {
-												selectedPlaylist.RemoveVideo(dragDropVideo.videoUrl).Wait();
-											}
-										}
-									} else {
-										List<Playlist> allPlaylists = new List<Playlist>();
-										Program.MainPlaylistFolder.GetAllPlaylistsRecurse(allPlaylists);
-										foreach (Playlist p in allPlaylists) {
-											if (p.ContainsVideo(dragDropVideo)) {
-												p.RemoveVideo(dragDropVideo.videoUrl).Wait();
-											}
-										}
-									}
-									playlist.AddVideo(dragDropVideo);
-								}
-
-								Program.SearchWindow.dragDropVideo = false;
-								this.ShouldReCache();
-							}
-						});
+						this.dragDropFolder = null;
+						Program.SearchWindow.dragDropVideo = false;
 					}
 
-					ImGui.EndDragDropTarget();
+					if (ImGui.BeginDragDropTarget()) {
+						if (ImGui.AcceptDragDropPayload("AddWindowDragDropPayload").NativePtr != null) {
+							this.doAfterRender.Add(() => {
+								if (this.dragDropPlaylist != null) {
+									this.RemoveSelectedPlaylist(this.dragDropPlaylist);
+									this.dragDropPlaylist.Move(parentFolder);
+									this.dragDropPlaylist = null;
+								}
+
+								if (this.dragDropFolder != null) {
+									this.dragDropFolder.Move(parentFolder);
+									this.dragDropFolder = null;
+								}
+
+								if (Program.SearchWindow.dragDropVideo) {
+									foreach (Video dragDropVideo in Program.SearchWindow.selectedVideos) {
+										if (this.AnyPlaylistSelected()) {
+											foreach (Playlist selectedPlaylist in this.selectedPlaylists) {
+												if (selectedPlaylist.ContainsVideo(dragDropVideo)) {
+													selectedPlaylist.RemoveVideo(dragDropVideo.videoUrl).Wait();
+												}
+											}
+										} else {
+											List<Playlist> allPlaylists = new List<Playlist>();
+											Program.MainPlaylistFolder.GetAllPlaylistsRecurse(allPlaylists);
+											foreach (Playlist p in allPlaylists) {
+												if (p.ContainsVideo(dragDropVideo)) {
+													p.RemoveVideo(dragDropVideo.videoUrl).Wait();
+												}
+											}
+										}
+										playlist.AddVideo(dragDropVideo);
+									}
+
+									Program.SearchWindow.dragDropVideo = false;
+									this.ShouldReCache();
+								}
+							});
+						}
+
+						ImGui.EndDragDropTarget();
+					}
+
 				}
 
 				if (ImGui.IsPopupOpen($"Playlist Popup {playlist.Name}")) {
@@ -375,33 +378,35 @@ public class PlaylistWindow {
 				bool anySelected = playlists.Any(playlist => this.selectedPlaylists.Contains(playlist));
 
 				void RenderPlaylistFolderGuts() {
-					if (ImGui.BeginDragDropSource()) {
-						ImGui.SetDragDropPayload("AddWindowDragDropPayload", nint.Zero, 0);
-						ImGui.Text(childPlaylistFolder.Name);
-						this.dragDropFolder = childPlaylistFolder;
-						ImGui.EndDragDropSource();
+					if (!Program.AddWindow.IsParsing) {
+						if (ImGui.BeginDragDropSource()) {
+							ImGui.SetDragDropPayload("AddWindowDragDropPayload", nint.Zero, 0);
+							ImGui.Text(childPlaylistFolder.Name);
+							this.dragDropFolder = childPlaylistFolder;
+							ImGui.EndDragDropSource();
 
-						this.dragDropPlaylist = null;
-						Program.SearchWindow.dragDropVideo = false;
-					}
-
-					if (ImGui.BeginDragDropTarget()) {
-						if (ImGui.AcceptDragDropPayload("AddWindowDragDropPayload").NativePtr != null) {
-							this.doAfterRender.Add(() => {
-								if (this.dragDropPlaylist != null) {
-									this.RemoveSelectedPlaylist(this.dragDropPlaylist);
-									this.dragDropPlaylist.Move(childPlaylistFolder);
-									this.dragDropPlaylist = null;
-								}
-
-								if (this.dragDropFolder != null) {
-									this.dragDropFolder.Move(childPlaylistFolder);
-									this.dragDropFolder = null;
-								}
-							});
+							this.dragDropPlaylist = null;
+							Program.SearchWindow.dragDropVideo = false;
 						}
 
-						ImGui.EndDragDropTarget();
+						if (ImGui.BeginDragDropTarget()) {
+							if (ImGui.AcceptDragDropPayload("AddWindowDragDropPayload").NativePtr != null) {
+								this.doAfterRender.Add(() => {
+									if (this.dragDropPlaylist != null) {
+										this.RemoveSelectedPlaylist(this.dragDropPlaylist);
+										this.dragDropPlaylist.Move(childPlaylistFolder);
+										this.dragDropPlaylist = null;
+									}
+
+									if (this.dragDropFolder != null) {
+										this.dragDropFolder.Move(childPlaylistFolder);
+										this.dragDropFolder = null;
+									}
+								});
+							}
+
+							ImGui.EndDragDropTarget();
+						}
 					}
 
 					if (ImGui.IsPopupOpen($"Playlist Popup {childPlaylistFolder.Name}")) {
@@ -467,23 +472,25 @@ public class PlaylistWindow {
 		}
 
 		ImGui.InvisibleButton("InvisibleDragDropTarget", new Vector2(-1, -1));
-		if (ImGui.BeginDragDropTarget()) {
-			if (ImGui.AcceptDragDropPayload("AddWindowDragDropPayload").NativePtr != null) {
-				this.doAfterRender.Add(() => {
-					if (this.dragDropPlaylist != null) {
-						this.RemoveSelectedPlaylist(this.dragDropPlaylist);
-						this.dragDropPlaylist.Move(Program.MainPlaylistFolder);
-						this.dragDropPlaylist = null;
-					}
+		if (!Program.AddWindow.IsParsing) {
+			if (ImGui.BeginDragDropTarget()) {
+				if (ImGui.AcceptDragDropPayload("AddWindowDragDropPayload").NativePtr != null) {
+					this.doAfterRender.Add(() => {
+						if (this.dragDropPlaylist != null) {
+							this.RemoveSelectedPlaylist(this.dragDropPlaylist);
+							this.dragDropPlaylist.Move(Program.MainPlaylistFolder);
+							this.dragDropPlaylist = null;
+						}
 
-					if (this.dragDropFolder != null) {
-						this.dragDropFolder.Move(Program.MainPlaylistFolder);
-						this.dragDropFolder = null;
-					}
-				});
+						if (this.dragDropFolder != null) {
+							this.dragDropFolder.Move(Program.MainPlaylistFolder);
+							this.dragDropFolder = null;
+						}
+					});
+				}
+
+				ImGui.EndDragDropTarget();
 			}
-
-			ImGui.EndDragDropTarget();
 		}
 
 		if (ImGui.BeginPopupContextWindow("", ImGuiPopupFlags.MouseButtonRight | ImGuiPopupFlags.NoOpenOverExistingPopup)) {
